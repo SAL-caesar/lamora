@@ -30,8 +30,12 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  if (!profile) return <p className="text-white p-10">جاري التحميل...</p>;
+  if (!profile)
+    return (
+      <p className="text-white p-10">جاري التحميل...</p>
+    );
 
+  // حل المشكلة هنا 🔥
   const refLink = https://lamora.vercel.app/auth/signup?ref=${profile.ref_code};
 
   return (
@@ -41,10 +45,12 @@ export default function DashboardPage() {
       <div className="p-10">
         <h1 className="text-3xl font-bold">مرحبا {profile.email}</h1>
 
-        <p className="mt-4 text-gray-300">رصيدك الحالي: ${profile.balance}</p>
+        <p className="mt-4 text-gray-300">
+          رصيدك الحالي: ${profile.balance}
+        </p>
 
         <div className="mt-6">
-          <h2 className="text-xl font-bold">رابط الإحالة الخاص بك:</h2>
+          <h2 className="text-xl font-bold">رابط الإحالة:</h2>
           <p className="text-yellow-400 mt-2">{refLink}</p>
         </div>
       </div>
