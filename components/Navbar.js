@@ -1,55 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useLanguage } from "./LanguageContext";
 
 export default function Navbar() {
-  const [lang, setLang] = useState("ar");
+  const { lang, toggle } = useLanguage();
 
-  useEffect(() => {
-    const stored = typeof window !== "undefined" && localStorage.getItem("lamora_lang");
-    if (stored === "en" || stored === "ar") setLang(stored);
-  }, []);
-
-  const toggleLang = () => {
-    const next = lang === "ar" ? "en" : "ar";
-    setLang(next);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("lamora_lang", next);
-    }
+  const t = {
+    brand: { ar: "Lamora", en: "Lamora" },
+    login: { ar: "تسجيل الدخول", en: "Login" },
+    signup: { ar: "إنشاء حساب", en: "Sign up" },
+    invest: { ar: "لوحة التحكم", en: "Dashboard" },
+    langLabel: { ar: "EN", en: "عربي" }
   };
 
-  const t = (ar, en) => (lang === "ar" ? ar : en);
-
   return (
-    <header className="border-b border-white/10 bg-black/30 backdrop-blur sticky top-0 z-20">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-lamoraBlack/80 border-b border-gray-800 backdrop-blur">
+      <nav className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-lamoraPrimary to-emerald-500 flex items-center justify-center text-black font-extrabold">
+          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-lamoraGold to-yellow-500 flex items-center justify-center text-lamoraBlack font-black">
             L
-          </div>
-          <span className="font-semibold text-lg">Lamora</span>
+          </span>
+          <span className="font-semibold text-lg text-lamoraGold tracking-wide">
+            {t.brand[lang]}
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/dashboard" className="hover:text-lamoraPrimary">
-            {t("لوحة التحكم", "Dashboard")}
-          </Link>
-          <Link href="/auth/login" className="hover:text-lamoraPrimary">
-            {t("تسجيل الدخول", "Login")}
-          </Link>
-          <Link href="/auth/signup" className="hover:text-lamoraPrimary">
-            {t("إنشاء حساب", "Sign up")}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggle}
+            className="text-xs border border-gray-700 rounded-full px-3 py-1 hover:border-lamoraGold hover:text-lamoraGold transition"
+          >
+            {t.langLabel[lang]}
+          </button>
+
+          <Link
+            href="/auth/login"
+            className="text-xs md:text-sm border border-gray-700 rounded-full px-4 py-1 hover:border-lamoraGold hover:text-lamoraGold transition"
+          >
+            {t.login[lang]}
           </Link>
 
-          <button
-            onClick={toggleLang}
-            className="px-3 py-1 rounded-full border border-white/20 text-xs hover:border-lamoraPrimary"
+          <Link
+            href="/auth/signup"
+            className="text-xs md:text-sm bg-lamoraGold text-lamoraBlack rounded-full px-4 py-1 font-semibold hover:bg-yellow-400 transition"
           >
-            {lang === "ar" ? "EN" : "AR"}
-          </button>
-        </nav>
-      </div>
+            {t.signup[lang]}
+          </Link>
+        </div>
+      </nav>
     </header>
   );
 }
