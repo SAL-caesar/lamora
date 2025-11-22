@@ -1,54 +1,58 @@
 "use client";
 
-import Link from "next/link";
-import { useLanguage } from "./LanguageContext";
+import { useState } from "react";
 
 export default function Navbar() {
-  const { lang, toggle } = useLanguage();
+  const [lang, setLang] = useState("ar");
 
-  const t = {
-    brand: { ar: "Lamora", en: "Lamora" },
-    login: { ar: "تسجيل الدخول", en: "Login" },
-    signup: { ar: "إنشاء حساب", en: "Sign up" },
-    invest: { ar: "لوحة التحكم", en: "Dashboard" },
-    langLabel: { ar: "EN", en: "عربي" }
-  };
+  const isAr = lang === "ar";
+
+  const t = (ar, en) => (isAr ? ar : en);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-lamoraBlack/80 border-b border-gray-800 backdrop-blur">
-      <nav className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-lamoraGold to-yellow-500 flex items-center justify-center text-lamoraBlack font-black">
+    <header className="border-b border-white/10 bg-black/40 backdrop-blur sticky top-0 z-30">
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-lamoraGold to-yellow-300 flex items-center justify-center text-black font-extrabold text-lg shadow-lg">
             L
-          </span>
-          <span className="font-semibold text-lg text-lamoraGold tracking-wide">
-            {t.brand[lang]}
-          </span>
-        </Link>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={toggle}
-            className="text-xs border border-gray-700 rounded-full px-3 py-1 hover:border-lamoraGold hover:text-lamoraGold transition"
-          >
-            {t.langLabel[lang]}
-          </button>
-
-          <Link
-            href="/auth/login"
-            className="text-xs md:text-sm border border-gray-700 rounded-full px-4 py-1 hover:border-lamoraGold hover:text-lamoraGold transition"
-          >
-            {t.login[lang]}
-          </Link>
-
-          <Link
-            href="/auth/signup"
-            className="text-xs md:text-sm bg-lamoraGold text-lamoraBlack rounded-full px-4 py-1 font-semibold hover:bg-yellow-400 transition"
-          >
-            {t.signup[lang]}
-          </Link>
+          </div>
+          <div>
+            <div className="font-bold tracking-wide text-lamoraGold">
+              Lamora
+            </div>
+            <div className="text-xs text-gray-400">
+              {t("منصة استثمار رقمية", "Digital Investment Platform")}
+            </div>
+          </div>
         </div>
-      </nav>
+
+        <div className="flex items-center gap-4">
+          <a
+            href="/"
+            className="text-sm text-gray-300 hover:text-lamoraGold transition"
+          >
+            {t("الرئيسية", "Home")}
+          </a>
+          <a
+            href="/dashboard"
+            className="text-sm text-gray-300 hover:text-lamoraGold transition"
+          >
+            {t("لوحة التحكم", "Dashboard")}
+          </a>
+
+          <a href="/auth/login" className="btn-gold text-xs">
+            {t("تسجيل الدخول", "Login")}
+          </a>
+
+          {/* سويتش لغة بسيط */}
+          <button
+            onClick={() => setLang(isAr ? "en" : "ar")}
+            className="text-xs border border-white/20 rounded-full px-3 py-1 text-gray-300 hover:border-lamoraGold hover:text-lamoraGold transition"
+          >
+            {isAr ? "EN" : "AR"}
+          </button>
+        </div>
+      </div>
     </header>
   );
 }
