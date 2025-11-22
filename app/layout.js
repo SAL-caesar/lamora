@@ -1,22 +1,15 @@
 import "./globals.css";
-import { LanguageProvider } from "../components/LanguageContext";
-import Navbar from "../components/Navbar";
 
 export const metadata = {
-  title: "Lamora",
-  description: "Lamora Investment Platform"
+  title: "Lamora Investments",
+  description: "منصة استثمار بنظام إحالات احترافي"
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ar">
-      <body className="bg-lamoraBlack text-gray-100">
-        <LanguageProvider>
-          <Navbar />
-          <main className="max-w-5xl mx-auto px-4 pt-24 pb-16">
-            {children}
-          </main>
-        </LanguageProvider>
+    <html lang="ar" dir="rtl">
+      <body className="bg-lamoraBlack text-white min-h-screen">
+        {children}
       </body>
     </html>
   );
