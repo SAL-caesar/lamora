@@ -1,133 +1,87 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "../../../lib/supabaseClient";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useLanguage } from "../../../components/LanguageContext";
-
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function SignupPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { lang } = useLanguage();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [refCode, setRefCode] = useState(""); // رمز الإحالة
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [refCode, setRefCode] = useState("");
 
+  // التقاط رمز الإحالة من الرابط
   useEffect(() => {
-    const ref = searchParams.get("ref");
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get("ref");
     if (ref) setRefCode(ref);
-  }, [searchParams]);
+  }, []);
 
-  const t = {
-    title: { ar: "إنشاء حساب جديد", en: "Create a new account" },
-    email: { ar: "البريد الإلكتروني", en: "Email" },
-    password: { ar: "كلمة المرور", en: "Password" },
-    referral: { ar: "كود الإحالة (اختياري)", en: "Referral code (optional)" },
-    submit: { ar: "إنشاء حساب", en: "Sign up" },
-    haveAccount: { ar: "لديك حساب؟ تسجيل الدخول", en: "Already have an account? Login" }
-  };
-
-  const handleSignup = async (e) => {
-    e.preventDefault();
+  const handleSignup = async () => {
     setMessage("");
-    setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password
-    });
+    // تسجيل المستخدم في auth
+    const { data: authData, error: authError } =
+      await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (error) {
-      setMessage(lang === "ar" ? "❌ فشل إنشاء الحساب" : "❌ Failed to create account");
-      setLoading(false);
+    if (authError) {
+      setMessage("فشل إنشاء الحساب");
       return;
     }
 
-    // حفظ كود الإحالة في جدول profiles عن طريق RPC أو RLS مناسبة
-    try {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        email: email,
-        ref_code: crypto.randomUUID().slice(0, 8),
-        referred_by_code: refCode || null
-      });
-    } catch (e) {
-      // ما منوقف المستخدم حتى لو فشل الإدخال، بس منسجل رسالة داخلية
-      console.error("Profile insert error", e);
+    // حفظ البيانات في جدول profiles
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert([
+        {
+          id: authData.user.id,
+          ref_code: generateRefCode(),
+          referred_by_code: refCode || null,
+        },
+      ]);
+
+    if (profileError) {
+      setMessage("حدث خطأ أثناء حفظ البيانات");
+      return;
     }
 
-    setLoading(false);
-    router.push("/dashboard");
+    window.location.href = "/dashboard";
   };
 
+  // توليد كود إحالة
+  function generateRefCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
   return (
-    <div className="max-w-md mx-auto mt-10 bg-lamoraGray border border-gray-800 rounded-2xl p-6">
-      <h1 className="text-xl font-semibold mb-4 text-lamoraGold">
-        {t.title[lang]}
-      </h1>
+    <div className="signup-container">
+      <h2>إنشاء حساب</h2>
 
-      <form onSubmit={handleSignup} className="space-y-4">
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">
-            {t.email[lang]}
-          </label>
-          <input
-            type="email"
-            required
-            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+      <input
+        type="email"
+        placeholder="البريد الإلكتروني"
+        onChange={(e) => setEmail(e.target.value)}
+      />
 
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">
-            {t.password[lang]}
-          </label>
-          <input
-            type="password"
-            required
-            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+      <input
+        type="password"
+        placeholder="كلمة المرور"
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">
-            {t.referral[lang]}
-          </label>
-          <input
-            type="text"
-            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
-            value={refCode}
-            onChange={(e) => setRefCode(e.target.value)}
-          />
-        </div>
+      {/* حقل رمز الإحالة (اختياري) */}
+      <input
+        type="text"
+        placeholder="رمز الإحالة (اختياري)"
+        value={refCode}
+        onChange={(e) => setRefCode(e.target.value)}
+      />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-lamoraGold text-lamoraBlack rounded-lg py-2 text-sm font-semibold hover:bg-yellow-400 transition disabled:opacity-60"
-        >
-          {loading ? "..." : t.submit[lang]}
-        </button>
-      </form>
+      <button onClick={handleSignup}>إنشاء حساب</button>
 
-      {message && (
-        <p className="text-center text-sm text-red-400 mt-3">{message}</p>
-      )}
-<p className="text-center text-xs text-gray-400 mt-4">
-        <a href="/auth/login" className="text-lamoraGold">
-          {t.haveAccount[lang]}
-        </a>
-      </p>
+      {message && <p>{message}</p>}
     </div>
   );
 }
