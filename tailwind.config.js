@@ -8,8 +8,8 @@ module.exports = {
     extend: {
       colors: {
         lamoraBlack: "#050509",
-        lamoraGold: "#f5c451",
-        lamoraGray: "#0f1015"
+        lamoraGold: "#f6c453",
+        lamoraGray: "#1b1b23"
       }
     }
   },
