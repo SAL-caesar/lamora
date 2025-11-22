@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar.jsx";
+import Navbar from "@/components/Navbar.js";
 import { supabase } from "@/lib/supabaseClient.js";
 
 export default function DashboardPage() {
