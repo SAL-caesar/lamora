@@ -1,34 +1,37 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
+import Navbar from "../components/Navbar";
 
-export default function HomePage() {
+export default function Home() {
   return (
-    <div className="min-h-screen bg-lamoraBlack text-white">
+    <main className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <main className="page-container">
-        <div className="text-center mt-10">
-          <h1 className="text-3xl font-bold text-lamoraGold">Lamora</h1>
-          <p className="text-gray-300 mt-3 text-sm">
-            منصة استثمار احترافية مع نظام مكافآت وإحالات
-          </p>
-        </div>
+      <section className="p-10">
+        <h1 className="text-4xl font-bold text-center text-yellow-400">
+          منصة Lamora — استثمــار آمن وذكي
+        </h1>
 
-        <div className="card mt-10">
-          <h2 className="text-lg font-bold mb-3">الباقات</h2>
-          <p className="text-gray-300 text-sm">قريباً سيتم عرض الباقات</p>
-        </div>
+        <p className="text-center mt-4 text-gray-300">
+          اختر خطتك الاستثمارية وابدأ بجني الأرباح
+        </p>
 
-        <div className="text-center mt-10">
+        <div className="mt-10 flex justify-center gap-6">
           <a
             href="/auth/signup"
-            className="btn-gold px-6 py-3 inline-block"
+            className="bg-yellow-500 px-6 py-3 rounded-lg font-bold"
           >
-            إنشاء حساب
+            حساب جديد
+          </a>
+
+          <a
+            href="/auth/login"
+            className="bg-gray-700 px-6 py-3 rounded-lg font-bold"
+          >
+            تسجيل الدخول
           </a>
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
