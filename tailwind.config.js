@@ -1,15 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}"
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}"
   ],
   theme: {
     extend: {
       colors: {
-        lamoraDark: "#050816",
-        lamoraPrimary: "#00D395",
-        lamoraSecondary: "#0F172A"
+        lamoraBlack: "#050509",
+        lamoraGold: "#f5c451",
+        lamoraGray: "#0f1015"
       }
     }
   },
