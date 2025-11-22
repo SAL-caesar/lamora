@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../../lib/supabaseClient";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useLanguage } from "../../../components/LanguageContext";
 
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
@@ -10,88 +11,123 @@ export const revalidate = 0;
 export default function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [lang, setLang] = useState("ar");
+  const { lang } = useLanguage();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-
-  const ref = searchParams?.get("ref") || null;
+  const [loading, setLoading] = useState(false);
+  const [refCode, setRefCode] = useState("");
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" && localStorage.getItem("lamora_lang");
-    if (stored === "en" || stored === "ar") setLang(stored);
-  }, []);
+    const ref = searchParams.get("ref");
+    if (ref) setRefCode(ref);
+  }, [searchParams]);
 
-  const t = (ar, en) => (lang === "ar" ? ar : en);
+  const t = {
+    title: { ar: "إنشاء حساب جديد", en: "Create a new account" },
+    email: { ar: "البريد الإلكتروني", en: "Email" },
+    password: { ar: "كلمة المرور", en: "Password" },
+    referral: { ar: "كود الإحالة (اختياري)", en: "Referral code (optional)" },
+    submit: { ar: "إنشاء حساب", en: "Sign up" },
+    haveAccount: { ar: "لديك حساب؟ تسجيل الدخول", en: "Already have an account? Login" }
+  };
 
-  const handleSignup = async () => {
+  const handleSignup = async (e) => {
+    e.preventDefault();
     setMessage("");
+    setLoading(true);
 
-    if (!supabase) {
-      setMessage(t("مشكلة في الاتصال بالخادم", "Server configuration error"));
-      return;
-    }
-
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
-      password,
-      options: {
-        data: {
-          referred_by: ref
-        }
-      }
+      password
     });
 
     if (error) {
-      setMessage(t("❌ تعذّر إنشاء الحساب", "❌ Failed to sign up"));
-    } else {
-      setMessage(t("✅ تم إنشاء الحساب، جاري التحويل...", "✅ Account created, redirecting..."));
-      setTimeout(() => router.push("/dashboard"), 800);
+      setMessage(lang === "ar" ? "❌ فشل إنشاء الحساب" : "❌ Failed to create account");
+      setLoading(false);
+      return;
     }
+
+    // حفظ كود الإحالة في جدول profiles عن طريق RPC أو RLS مناسبة
+    try {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        email: email,
+        ref_code: crypto.randomUUID().slice(0, 8),
+        referred_by_code: refCode || null
+      });
+    } catch (e) {
+      // ما منوقف المستخدم حتى لو فشل الإدخال، بس منسجل رسالة داخلية
+      console.error("Profile insert error", e);
+    }
+
+    setLoading(false);
+    router.push("/dashboard");
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 lamora-glass p-6">
-      <h1 className="text-2xl font-bold mb-4 text-center">
-        {t("إنشاء حساب جديد", "Create a new account")}
+    <div className="max-w-md mx-auto mt-10 bg-lamoraGray border border-gray-800 rounded-2xl p-6">
+      <h1 className="text-xl font-semibold mb-4 text-lamoraGold">
+        {t.title[lang]}
       </h1>
 
-      {ref && (
-        <div className="mb-3 text-xs text-emerald-300 text-center">
-          {t("تسجّلت من رابط إحالة:", "You are using referral code:")}{" "}
-          <span className="font-mono">{ref}</span>
+      <form onSubmit={handleSignup} className="space-y-4">
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">
+            {t.email[lang]}
+          </label>
+          <input
+            type="email"
+            required
+            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-      )}
 
-      <label className="text-xs text-gray-300 mb-1 block">
-        {t("البريد الإلكتروني", "Email")}
-      </label>
-      <input
-        className="input mb-3"
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder={t("example@mail.com", "example@mail.com")}
-      />
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">
+            {t.password[lang]}
+          </label>
+          <input
+            type="password"
+            required
+            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-      <label className="text-xs text-gray-300 mb-1 block">
-        {t("كلمة المرور", "Password")}
-      </label>
-      <input
-        className="input mb-4"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder={t("••••••••", "••••••••")}
-      />
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">
+            {t.referral[lang]}
+          </label>
+          <input
+            type="text"
+            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
+            value={refCode}
+            onChange={(e) => setRefCode(e.target.value)}
+          />
+        </div>
 
-      <button onClick={handleSignup} className="btn-primary w-full mb-3">
-        {t("إنشاء حساب", "Sign up")}
-      </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-lamoraGold text-lamoraBlack rounded-lg py-2 text-sm font-semibold hover:bg-yellow-400 transition disabled:opacity-60"
+        >
+          {loading ? "..." : t.submit[lang]}
+        </button>
+      </form>
 
       {message && (
-        <p className="text-center text-sm text-emerald-300 font-semibold">{message}</p>
+        <p className="text-center text-sm text-red-400 mt-3">{message}</p>
       )}
+<p className="text-center text-xs text-gray-400 mt-4">
+        <a href="/auth/login" className="text-lamoraGold">
+          {t.haveAccount[lang]}
+        </a>
+      </p>
     </div>
   );
 }
