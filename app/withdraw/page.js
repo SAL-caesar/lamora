@@ -1,22 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function WithdrawPage() {
   const [amount, setAmount] = useState("");
+  const [profile, setProfile] = useState(null);
   const [msg, setMsg] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [userRow, setUserRow] = useState(null);
 
   useEffect(() => {
     load();
   }, []);
 
   async function load() {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const user = sessionData.session?.user;
+    const { data: session } = await supabase.auth.getSession();
+    const user = session.session?.user;
+
     if (!user) {
       window.location.href = "/auth/login";
       return;
@@ -28,94 +28,76 @@ export default function WithdrawPage() {
       .eq("id", user.id)
       .single();
 
-    setUserRow(data || null);
+    setProfile(data);
   }
 
-  const handleWithdraw = async () => {
+  async function submitWithdraw() {
     setMsg("");
-    if (!amount || isNaN(amount)) {
+
+    const value = Number(amount);
+
+    if (isNaN(value) || value <= 0) {
       setMsg("أدخل مبلغاً صالحاً");
       return;
     }
 
-    const value = Number(amount);
-    if (value <= 0) {
-      setMsg("المبلغ يجب أن يكون أكبر من 0");
+    if (value > profile.balance) {
+      setMsg("المبلغ أكبر من رصيدك");
       return;
     }
 
-    if (!userRow  value > Number(userRow.balance  0)) {
-      setMsg("المبلغ أكبر من رصيدك المتاح");
-      return;
-    }
-
-    setLoading(true);
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    const user = sessionData.session?.user;
-
-    // نضيف سجل في جدول العمليات
-    const { error } = await supabase.from("transactions").insert([
+    await supabase.from("transactions").insert([
       {
-        user_id: user.id,
+        user_id: profile.id,
         type: "withdraw",
-        amount: value
-      }
+        amount: value,
+      },
     ]);
 
-    if (error) {
-      console.error(error);
-      setMsg("حدث خطأ أثناء إرسال طلب السحب");
-      setLoading(false);
-      return;
-    }
-
-    setMsg("تم تسجيل طلب السحب، سيتم مراجعته من الإدارة.");
-    setLoading(false);
+    setMsg("تم إرسال الطلب");
     setAmount("");
-  };
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-lamoraBlack text-white">
+        <Navbar />
+        <div className="page-container mt-10">جارٍ التحميل...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-lamoraBlack">
+    <div className="min-h-screen bg-lamoraBlack text-white">
       <Navbar />
-      <main className="page-container max-w-md">
-        <div className="card space-y-4 mt-6">
-          <h2 className="text-xl font-bold text-center text-lamoraGold">
-            طلب سحب رصيد
-          </h2>
 
-          {userRow && (
-            <p className="text-center text-sm text-gray-300">
-              رصيدك الحالي:{" "}
-              <span className="text-lamoraGold font-semibold">
-                ${Number(userRow.balance || 0).toFixed(2)}
-              </span>
-            </p>
-          )}
+      <main className="page-container mt-10 space-y-6">
+        <div className="card">
+          <h2 className="text-lg font-bold">طلب سحب</h2>
+          <p className="text-gray-400 mt-2">
+            رصيدك الحالي: ${profile.balance}
+          </p>
 
           <input
-            className="input"
             type="number"
-            placeholder="المبلغ المطلوب سحبه"
+            className="input mt-3"
             value={amount}
+            placeholder="المبلغ"
             onChange={(e) => setAmount(e.target.value)}
           />
 
           <button
-            onClick={handleWithdraw}
-            disabled={loading}
-            className="btn-gold w-full disabled:opacity-60"
+            onClick={submitWithdraw}
+            className="btn-gold mt-4 w-full"
           >
-            {loading ? "جاري الإرسال..." : "إرسال الطلب"}
+            إرسال الطلب
           </button>
 
           {msg && (
-            <p className="text-center text-sm text-gray-200">{msg}</p>
+            <p className="text-center text-sm text-gray-300 mt-3">
+              {msg}
+            </p>
           )}
-
-          <p className="text-xs text-gray-400 text-center">
-            السحب هنا تجريبي، لا توجد عمليات مالية حقيقية داخل Lamora.
-          </p>
         </div>
       </main>
     </div>
