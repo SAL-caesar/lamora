@@ -30,12 +30,12 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  if (!profile)
+  if (!profile) {
     return (
       <p className="text-white p-10">جاري التحميل...</p>
     );
+  }
 
-  // حل المشكلة هنا 🔥
   const refLink = https://lamora.vercel.app/auth/signup?ref=${profile.ref_code};
 
   return (
