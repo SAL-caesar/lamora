@@ -1,41 +1,33 @@
-<div
-                key={plan.id}
-                className="card flex flex-col justify-between bg-gradient-to-br from-lamoraGray to-black"
-              >
-                <div className="space-y-2">
-                  <div className="text-lamoraGold font-bold text-lg">
-                    {plan.nameAr}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {plan.nameEn}
-                  </div>
-                  <div className="text-sm text-gray-200 pt-2">
-                    الحد الأدنى:{" "}
-                    <span className="font-semibold">
-                      ${plan.min}
-                    </span>
-                    <br />
-                    الحد الأقصى:{" "}
-                    <span className="font-semibold">
-                      ${plan.max}
-                    </span>
-                  </div>
-                </div>
-                <div className="pt-4 flex items-center justify-between">
-                  <div className="text-lamoraGold font-semibold text-sm">
-                    العائد: {plan.profit}
-                  </div>
-                  <a
-                    href="/auth/signup"
-                    className="text-xs btn-gold"
-                  >
-                    استثمار الآن
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+"use client";
+
+import Navbar from "@/components/Navbar";
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-lamoraBlack text-white">
+      <Navbar />
+
+      <main className="page-container">
+        <div className="text-center mt-10">
+          <h1 className="text-3xl font-bold text-lamoraGold">Lamora</h1>
+          <p className="text-gray-300 mt-3 text-sm">
+            منصة استثمار احترافية مع نظام مكافآت وإحالات
+          </p>
+        </div>
+
+        <div className="card mt-10">
+          <h2 className="text-lg font-bold mb-3">الباقات</h2>
+          <p className="text-gray-300 text-sm">قريباً سيتم عرض الباقات</p>
+        </div>
+
+        <div className="text-center mt-10">
+          <a
+            href="/auth/signup"
+            className="btn-gold px-6 py-3 inline-block"
+          >
+            إنشاء حساب
+          </a>
+        </div>
       </main>
     </div>
   );
