@@ -36,7 +36,7 @@ export default function DashboardPage() {
     );
   }
 
-  const refLink = https://lamora.vercel.app/auth/signup?ref=${profile.ref_code};
+  const refLink = `https://lamora.vercel.app/auth/signup?ref=${profile.ref_code};
 
   return (
     <div className="min-h-screen bg-lamoraBlack text-white">
