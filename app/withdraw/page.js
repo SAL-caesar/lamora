@@ -1,130 +1,123 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
-import { useLanguage } from "../../components/LanguageContext";
-
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
+import { supabase } from "@/lib/supabaseClient";
+import Navbar from "@/components/Navbar";
 
 export default function WithdrawPage() {
-  const { lang } = useLanguage();
-
-  const [user, setUser] = useState(null);
-  const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
-  const [message, setMessage] = useState("");
+  const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [userRow, setUserRow] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      setUser(user);
-
-      const { data: wallet } = await supabase
-        .from("wallets")
-        .select("balance")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      setBalance(wallet?.balance || 0);
-    };
-
     load();
   }, []);
 
-  const t = {
-    title: { ar: "طلب سحب", en: "Withdrawal request" },
-    available: { ar: "الرصيد المتاح", en: "Available balance" },
-    amount: { ar: "المبلغ المراد سحبه", en: "Amount to withdraw" },
-    submit: { ar: "إرسال الطلب", en: "Submit request" }
-  };
-
-  const handleWithdraw = async (e) => {
-    e.preventDefault();
-    setMessage("");
-
-    const value = Number(amount);
-    if (!value  value <= 0  value > balance) {
-      setMessage(
-        lang === "ar"
-          ? "❌ المبلغ غير صالح"
-          : "❌ Invalid amount"
-      );
+  async function load() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+    if (!user) {
+      window.location.href = "/auth/login";
       return;
     }
 
-    // مجرد تسجيل عملية في جدول transactions
-    try {
-      await supabase.from("transactions").insert({
+    const { data } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    setUserRow(data || null);
+  }
+
+  const handleWithdraw = async () => {
+    setMsg("");
+    if (!amount || isNaN(amount)) {
+      setMsg("أدخل مبلغاً صالحاً");
+      return;
+    }
+
+    const value = Number(amount);
+    if (value <= 0) {
+      setMsg("المبلغ يجب أن يكون أكبر من 0");
+      return;
+    }
+
+    if (!userRow  value > Number(userRow.balance  0)) {
+      setMsg("المبلغ أكبر من رصيدك المتاح");
+      return;
+    }
+
+    setLoading(true);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+
+    // نضيف سجل في جدول العمليات
+    const { error } = await supabase.from("transactions").insert([
+      {
         user_id: user.id,
         type: "withdraw",
         amount: value
-      });
+      }
+    ]);
 
-      setMessage(
-        lang === "ar"
-          ? "✅ تم تسجيل طلب السحب"
-          : "✅ Withdrawal request recorded"
-      );
-      setAmount("");
-    } catch (e) {
-      setMessage(
-        lang === "ar"
-          ? "❌ حدث خطأ أثناء تسجيل الطلب"
-          : "❌ Error while saving request"
-      );
+    if (error) {
+      console.error(error);
+      setMsg("حدث خطأ أثناء إرسال طلب السحب");
+      setLoading(false);
+      return;
     }
+
+    setMsg("تم تسجيل طلب السحب، سيتم مراجعته من الإدارة.");
+    setLoading(false);
+    setAmount("");
   };
 
-  if (!user) {
-    return (
-      <p className="text-center mt-10 text-gray-400">
-        {lang === "ar"
-          ? "يرجى تسجيل الدخول أولاً."
-          : "Please login first."}
-      </p>
-    );
-  }
-
   return (
-    <div className="max-w-md mx-auto mt-10 bg-lamoraGray border border-gray-800 rounded-2xl p-6">
-      <h1 className="text-xl font-semibold mb-4 text-lamoraGold">
-        {t.title[lang]}
-      </h1>
+    <div className="min-h-screen bg-lamoraBlack">
+      <Navbar />
+      <main className="page-container max-w-md">
+        <div className="card space-y-4 mt-6">
+          <h2 className="text-xl font-bold text-center text-lamoraGold">
+            طلب سحب رصيد
+          </h2>
 
-      <p className="text-xs text-gray-300 mb-3">
-        {t.available[lang]}:{" "}
-        <span className="font-semibold">${Number(balance).toFixed(2)}</span>
-      </p>
+          {userRow && (
+            <p className="text-center text-sm text-gray-300">
+              رصيدك الحالي:{" "}
+              <span className="text-lamoraGold font-semibold">
+                ${Number(userRow.balance || 0).toFixed(2)}
+              </span>
+            </p>
+          )}
 
-      <form onSubmit={handleWithdraw} className="space-y-4">
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">
-            {t.amount[lang]}
-          </label>
           <input
+            className="input"
             type="number"
-            min="1"
-            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
+            placeholder="المبلغ المطلوب سحبه"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
+
+          <button
+            onClick={handleWithdraw}
+            disabled={loading}
+            className="btn-gold w-full disabled:opacity-60"
+          >
+            {loading ? "جاري الإرسال..." : "إرسال الطلب"}
+          </button>
+
+          {msg && (
+            <p className="text-center text-sm text-gray-200">{msg}</p>
+          )}
+
+          <p className="text-xs text-gray-400 text-center">
+            السحب هنا تجريبي، لا توجد عمليات مالية حقيقية داخل Lamora.
+          </p>
         </div>
-
-        <button
-          type="submit"
-          className="w-full bg-lamoraGold text-lamoraBlack rounded-lg py-2 text-sm font-semibold hover:bg-yellow-400 transition"
-        >
-          {t.submit[lang]}
-        </button>
-      </form>
-
-      {message && (
-        <p className="text-center text-sm mt-3 text-gray-200">{message}</p>
-      )}
+      </main>
     </div>
   );
 }
