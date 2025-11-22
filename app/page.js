@@ -1,70 +1,71 @@
 "use client";
 
+import PriceTicker from "../components/PriceTicker";
+import InvestPlans from "../components/InvestPlans";
+import { useLanguage } from "../components/LanguageContext";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [lang, setLang] = useState("ar");
+  const { lang } = useLanguage();
 
-  useEffect(() => {
-    const stored = typeof window !== "undefined" && localStorage.getItem("lamora_lang");
-    if (stored === "en" || stored === "ar") setLang(stored);
-  }, []);
-
-  const t = (ar, en) => (lang === "ar" ? ar : en);
+  const t = {
+    heroTitle: {
+      ar: "استثمر بثقة مع Lamora",
+      en: "Invest with confidence with Lamora"
+    },
+    heroSubtitle: {
+      ar: "منصة استثمار ذكية، نظام إحالات مجزٍ، ولوحة تحكم واضحة لرصيدك وأرباحك.",
+      en: "Smart investment platform, rewarding referral system, and a clear dashboard for your balance and profits."
+    },
+    cta: {
+      ar: "ابدأ الاستثمار الآن",
+      en: "Start investing now"
+    },
+    secondaryCta: {
+      ar: "جرّب لوحة التحكم",
+      en: "View dashboard demo"
+    },
+    pricesTitle: {
+      ar: "أسعار العملات الرقمية",
+      en: "Crypto Prices"
+    }
+  };
 
   return (
-    <div className="mt-10 grid md:grid-cols-2 gap-8 items-center">
-      <div>
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-          {t("استثمر بثقة مع Lamora", "Invest with confidence using Lamora")}
-        </h1>
-        <p className="text-sm md:text-base text-gray-300 mb-6">
-          {t(
-            "منصة استثمار حديثة توفّر لك محفظة ذكية، نظام إحالات بمكافأة 3$، ولوحة تحكم تتابع منها كل شيء.",
-            "A modern investment platform with a smart wallet, $3 referral rewards, and a powerful dashboard."
-          )}
-        </p>
-
-        <div className="flex flex-wrap gap-3">
-          <Link href="/auth/signup" className="btn-primary">
-            {t("ابدأ الآن", "Get started")}
-          </Link>
-          <Link
-            href="/dashboard"
-            className="px-4 py-2 rounded-lg border border-white/20 text-sm hover:border-lamoraPrimary"
-          >
-            {t("استعراض لوحة التحكم", "View dashboard")}
-          </Link>
-        </div>
-
-        <div className="mt-6 text-xs text-gray-400">
-          {t(
-            "مكافأة إحالة: 3$ تذهب مباشرة إلى رصيد المحفظة عند تسجيل مستخدم جديد من رابطك.",
-            "Referral bonus: $3 goes straight to your wallet when a new user signs up with your link."
-          )}
-        </div>
-      </div>
-
-      <div className="lamora-glass p-6 md:p-8">
-        <h2 className="font-semibold mb-4 text-lg">
-          {t("لمحة عن استثماراتك", "Your investments snapshot")}
-        </h2>
-        <div className="grid grid-cols-2 gap-4 text-xs md:text-sm">
-          <div className="bg-black/40 rounded-lg p-3">
-            <div className="text-gray-400">{t("إجمالي الرصيد", "Total balance")}</div>
-            <div className="text-2xl font-bold mt-1">$12,430</div>
-          </div>
-          <div className="bg-black/40 rounded-lg p-3">
-            <div className="text-gray-400">{t("ربح اليوم", "Today P/L")}</div>
-            <div className="text-2xl font-bold mt-1 text-lamoraPrimary">+3.2%</div>
-          </div>
-          <div className="bg-black/40 rounded-lg p-3 col-span-2">
-            <div className="text-gray-400">{t("المستخدمون النشطون", "Active investors")}</div>
-            <div className="text-xl font-bold mt-1">2,194</div>
+    <div className="space-y-10">
+      <section className="grid md:grid-cols-2 gap-8 items-center">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-snug">
+            {t.heroTitle[lang]}
+          </h1>
+          <p className="text-sm md:text-base text-gray-300 mb-6">
+            {t.heroSubtitle[lang]}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/auth/signup"
+              className="bg-lamoraGold text-lamoraBlack px-5 py-2 rounded-full text-sm font-semibold hover:bg-yellow-400 transition"
+            >
+              {t.cta[lang]}
+            </Link>
+            <Link
+              href="/dashboard"
+              className="border border-gray-700 text-gray-200 px-5 py-2 rounded-full text-sm hover:border-lamoraGold hover:text-lamoraGold transition"
+            >
+              {t.secondaryCta[lang]}
+            </Link>
           </div>
         </div>
-      </div>
+
+        <div className="rounded-3xl border border-gray-800 bg-gradient-to-br from-lamoraGray to-black p-4">
+          <h2 className="text-sm text-gray-300 mb-3">
+            {t.pricesTitle[lang]}
+          </h2>
+          <PriceTicker />
+        </div>
+      </section>
+
+      <InvestPlans />
     </div>
   );
 }
