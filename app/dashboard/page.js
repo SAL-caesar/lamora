@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
-import { supabase } from "@/lib/supabaseClient.js";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState(null);
