@@ -1,105 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useEffect } from "react";
+import Navbar from "../../components/Navbar";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function WithdrawPage() {
-  const [amount, setAmount] = useState("");
   const [profile, setProfile] = useState(null);
+  const [value, setValue] = useState("");
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
+    const load = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        window.location.href = "/auth/login";
+        return;
+      }
+
+      const { data: row } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      setProfile(row);
+    };
+
     load();
   }, []);
 
-  async function load() {
-    const { data: session } = await supabase.auth.getSession();
-    const user = session.session?.user;
-
-    if (!user) {
-      window.location.href = "/auth/login";
+  const sendRequest = async () => {
+    if (!value || Number(value) <= 0) {
+      setMsg("أدخل مبلغ صحيح");
       return;
     }
 
-    const { data } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    setProfile(data);
-  }
-
-  async function submitWithdraw() {
-    setMsg("");
-
-    const value = Number(amount);
-
-    if (isNaN(value) || value <= 0) {
-      setMsg("أدخل مبلغاً صالحاً");
+    if (Number(value) > Number(profile.balance)) {
+      setMsg("المبلغ المطلوب أكبر من رصيدك الحالي");
       return;
     }
 
-    if (value > profile.balance) {
-      setMsg("المبلغ أكبر من رصيدك");
-      return;
-    }
+    await supabase.from("transactions").insert({
+      user_id: profile.id,
+      type: "withdraw",
+      amount: Number(value),
+      status: "pending",
+    });
 
-    await supabase.from("transactions").insert([
-      {
-        user_id: profile.id,
-        type: "withdraw",
-        amount: value,
-      },
-    ]);
+    setMsg("تم إرسال طلب السحب بنجاح");
+  };
 
-    setMsg("تم إرسال الطلب");
-    setAmount("");
-  }
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-lamoraBlack text-white">
-        <Navbar />
-        <div className="page-container mt-10">جارٍ التحميل...</div>
-      </div>
-    );
-  }
+  if (!profile) return <p className="text-white p-10">جاري التحميل...</p>;
 
   return (
-    <div className="min-h-screen bg-lamoraBlack text-white">
+    <div className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <main className="page-container mt-10 space-y-6">
-        <div className="card">
-          <h2 className="text-lg font-bold">طلب سحب</h2>
-          <p className="text-gray-400 mt-2">
-            رصيدك الحالي: ${profile.balance}
-          </p>
+      <div className="p-10">
+        <h1 className="text-2xl font-bold mb-4">طلب سحب</h1>
 
-          <input
-            type="number"
-            className="input mt-3"
-            value={amount}
-            placeholder="المبلغ"
-            onChange={(e) => setAmount(e.target.value)}
-          />
+        <input
+          className="bg-gray-800 p-3 rounded w-full"
+          placeholder="المبلغ"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
 
-          <button
-            onClick={submitWithdraw}
-            className="btn-gold mt-4 w-full"
-          >
-            إرسال الطلب
-          </button>
+        <button
+          onClick={sendRequest}
+          className="mt-4 bg-yellow-500 text-black p-3 rounded w-full"
+        >
+          إرسال الطلب
+        </button>
 
-          {msg && (
-            <p className="text-center text-sm text-gray-300 mt-3">
-              {msg}
-            </p>
-          )}
-        </div>
-      </main>
+        {msg && <p className="mt-4 text-yellow-400">{msg}</p>}
+      </div>
     </div>
   );
 }
