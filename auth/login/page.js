@@ -1,33 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../../lib/supabaseClient";
-import { useRouter } from "next/navigation";
-import { useLanguage } from "../../../components/LanguageContext";
-
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
+import { supabase } from "@/lib/supabaseClient";
+import Navbar from "@/components/Navbar";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { lang } = useLanguage();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const t = {
-    title: { ar: "تسجيل الدخول", en: "Login" },
-    email: { ar: "البريد الإلكتروني", en: "Email" },
-    password: { ar: "كلمة المرور", en: "Password" },
-    submit: { ar: "تسجيل الدخول", en: "Login" },
-    noAccount: { ar: "ليس لديك حساب؟ أنشئ حساباً", en: "No account? Sign up" }
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setMessage("");
+  const handleLogin = async () => {
+    setMsg("");
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -36,66 +20,62 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setMessage(lang === "ar" ? "❌ خطأ في تسجيل الدخول" : "❌ Login failed");
+      setMsg("خطأ في تسجيل الدخول، تحقق من البيانات");
       setLoading(false);
       return;
     }
 
-    setLoading(false);
-    router.push("/dashboard");
+    setMsg("تم تسجيل الدخول، جاري تحويلك...");
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 800);
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-lamoraGray border border-gray-800 rounded-2xl p-6">
-      <h1 className="text-xl font-semibold mb-4 text-lamoraGold">
-        {t.title[lang]}
-      </h1>
+    <div className="min-h-screen bg-lamoraBlack">
+      <Navbar />
+      <main className="page-container max-w-md">
+        <div className="card space-y-4 mt-6">
+          <h2 className="text-xl font-bold text-center text-lamoraGold">
+            تسجيل الدخول
+          </h2>
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">
-            {t.email[lang]}
-          </label>
           <input
+            className="input"
             type="email"
-            required
-            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
+            placeholder="البريد الإلكتروني"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </div>
 
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">
-            {t.password[lang]}
-          </label>
           <input
+            className="input"
             type="password"
-            required
-            className="w-full rounded-lg bg-black border border-gray-700 px-3 py-2 text-sm focus:outline-none focus:border-lamoraGold"
+            placeholder="كلمة المرور"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="btn-gold w-full mt-2 disabled:opacity-60"
+          >
+            {loading ? "جاري الدخول..." : "دخول"}
+          </button>
+
+          {msg && (
+            <p className="text-center text-sm text-gray-200">{msg}</p>
+          )}
+
+          <p className="text-xs text-center text-gray-400">
+            ليس لديك حساب؟{" "}
+            <a href="/auth/signup" className="text-lamoraGold">
+              إنشاء حساب
+            </a>
+          </p>
         </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-lamoraGold text-lamoraBlack rounded-lg py-2 text-sm font-semibold hover:bg-yellow-400 transition disabled:opacity-60"
-        >
-          {loading ? "..." : t.submit[lang]}
-        </button>
-      </form>
-
-      {message && (
-        <p className="text-center text-sm text-red-400 mt-3">{message}</p>
-      )}
-
-      <p className="text-center text-xs text-gray-400 mt-4">
-        <a href="/auth/signup" className="text-lamoraGold">
-          {t.noAccount[lang]}
-        </a>
-      </p>
+      </main>
     </div>
   );
 }
