@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Navbar from "../../components/Navbar";
-import { supabase } from "../../lib/supabaseClient";
+import Navbar from "@/components/Navbar";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState(null);
@@ -31,12 +31,10 @@ export default function DashboardPage() {
   }, []);
 
   if (!profile) {
-    return (
-      <p className="text-white p-10">جاري التحميل...</p>
-    );
+    return <p className="text-white p-10">جاري التحميل...</p>;
   }
 
-  const refLink = `https://lamora.vercel.app/auth/signup?ref=${profile.ref_code};
+  const refLink = `https://lamora.vercel.app/auth/signup?ref=${profile.ref_code}`;
 
   return (
     <div className="min-h-screen bg-lamoraBlack text-white">
